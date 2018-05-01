@@ -1,6 +1,9 @@
 package bitmex
 
-import "testing"
+import (
+	"testing"
+	"fmt"
+)
 
 var b Bitmex
 
@@ -12,9 +15,16 @@ func TestSetDefaults(t *testing.T) {
 }
 
 
-func TestGetTicker(t *testing.T) {
+func TestBitmex_GetTicker(t *testing.T) {
 	_, err := b.GetTicker(SYMBOL)
 	if err != nil {
 		t.Error("Test faild - Bitmex GetTicker() error")
 	}
+}
+func TestBitmex_GetCandles(t *testing.T) {
+	candles, err := b.GetCandles(SYMBOL, "5m", 100)
+	if err != nil {
+		t.Error("Test faild - Bitmex GetTicker() error")
+	}
+	fmt.Print(candles)
 }

@@ -9,6 +9,8 @@ import (
 	"github.com/CryptoTradingBot/exchanges/common"
 	"bytes"
 	"net/http"
+	"github.com/CryptoTradingBot/exchanges/models"
+	"strconv"
 )
 
 const (
@@ -150,16 +152,27 @@ func (b *Bitmex) GetTicker(currencyPair string) ([]Ticker, error){
 	return resp, nil
 }
 
+// Get Candles history by current pair and timeFrame (can be 1m 5m 1h)
+func (b *Bitmex) GetCandles(currencyPair string, timeframe string, count int) ([]models.Candle, error) {
+	vals := url.Values{}
 
-func (b *Bitmex) GetCandles(currencyPair, start, end, period string) ([]ChartData, error) {
+	vals.Set("symbol", currencyPair)
+	vals.Set("count", strconv.Itoa(count))
+	vals.Set("binSize", timeframe)
+	vals.Set("partial", "false")
+	vals.Set("reverse", "true")
 
-/*	err := b.SendHTTPRequest(path, &resp)
+	var resp []models.Candle
+	path := fmt.Sprintf("%s/%s?%s", bitmexAPIURL, bitmexTradeBucketed, vals.Encode())
+
+	err := b.SendHTTPRequest(path, &resp)
 	if err != nil {
 		return nil, err
 	}
 
-	return resp, nil*/
+	return resp, nil
 }
+
 
 // SetDefaults sets the basic defaults for bitmex
 func (b *Bitmex) SetDefaults() {

@@ -7,8 +7,6 @@ import (
 
 // General candle when receiving data from exchange
 type Candle struct {
-	BidPrice  float64   `json:"bidPrice,omitempty"`
-	AskPrice  float64   `json:"askPrice,omitempty"`
 	Close     float64   `json:"close,omitempty"`
 	Open      float64   `json:"open,omitempty"`
 	High      float64   `json:"high,omitempty"`
