@@ -143,3 +143,84 @@ type Position struct {
 	LastPrice            float64   `json:"lastPrice,omitempty"`
 	LastValue            float32   `json:"lastValue,omitempty"`
 }
+
+// Wallet
+type Wallet struct {
+	Account float32 `json:"account"`
+	Currency string `json:"currency"`
+	PrevDeposited float32 `json:"prevDeposited,omitempty"`
+	PrevWithdrawn float32 `json:"prevWithdrawn,omitempty"`
+	PrevTransferIn float32 `json:"prevTransferIn,omitempty"`
+	PrevTransferOut float32 `json:"prevTransferOut,omitempty"`
+	PrevAmount float32 `json:"prevAmount,omitempty"`
+	PrevTimestamp time.Time `json:"prevTimestamp,omitempty"`
+	DeltaDeposited float32 `json:"deltaDeposited,omitempty"`
+	DeltaWithdrawn float32 `json:"deltaWithdrawn,omitempty"`
+	DeltaTransferIn float32 `json:"deltaTransferIn,omitempty"`
+	DeltaTransferOut float32 `json:"deltaTransferOut,omitempty"`
+	DeltaAmount float32 `json:"deltaAmount,omitempty"`
+	Deposited float32 `json:"deposited,omitempty"`
+	Withdrawn float32 `json:"withdrawn,omitempty"`
+	TransferIn float32 `json:"transferIn,omitempty"`
+	TransferOut float32 `json:"transferOut,omitempty"`
+	Amount float32 `json:"amount,omitempty"`
+	PendingCredit float32 `json:"pendingCredit,omitempty"`
+	PendingDebit float32 `json:"pendingDebit,omitempty"`
+	ConfirmedDebit float32 `json:"confirmedDebit,omitempty"`
+	Timestamp time.Time `json:"timestamp,omitempty"`
+	Addr string `json:"addr,omitempty"`
+	Script string `json:"script,omitempty"`
+	WithdrawalLock []string `json:"withdrawalLock,omitempty"`
+}
+// Margin info
+type Margin struct {
+	Account float32 `json:"account"`
+	Currency string `json:"currency"`
+	RiskLimit float32 `json:"riskLimit,omitempty"`
+	PrevState string `json:"prevState,omitempty"`
+	State string `json:"state,omitempty"`
+	Action string `json:"action,omitempty"`
+	Amount float32 `json:"amount,omitempty"`
+	PendingCredit float32 `json:"pendingCredit,omitempty"`
+	PendingDebit float32 `json:"pendingDebit,omitempty"`
+	ConfirmedDebit float32 `json:"confirmedDebit,omitempty"`
+	PrevRealisedPnl float32 `json:"prevRealisedPnl,omitempty"`
+	PrevUnrealisedPnl float32 `json:"prevUnrealisedPnl,omitempty"`
+	GrossComm float32 `json:"grossComm,omitempty"`
+	GrossOpenCost float32 `json:"grossOpenCost,omitempty"`
+	GrossOpenPremium float32 `json:"grossOpenPremium,omitempty"`
+	GrossExecCost float32 `json:"grossExecCost,omitempty"`
+	GrossMarkValue float32 `json:"grossMarkValue,omitempty"`
+	RiskValue float32 `json:"riskValue,omitempty"`
+	TaxableMargin float32 `json:"taxableMargin,omitempty"`
+	InitMargin float32 `json:"initMargin,omitempty"`
+	MaintMargin float32 `json:"maintMargin,omitempty"`
+	SessionMargin float32 `json:"sessionMargin,omitempty"`
+	TargetExcessMargin float32 `json:"targetExcessMargin,omitempty"`
+	VarMargin float32 `json:"varMargin,omitempty"`
+	RealisedPnl float32 `json:"realisedPnl,omitempty"`
+	UnrealisedPnl float32 `json:"unrealisedPnl,omitempty"`
+	IndicativeTax float32 `json:"indicativeTax,omitempty"`
+	UnrealisedProfit float32 `json:"unrealisedProfit,omitempty"`
+	SyntheticMargin float32 `json:"syntheticMargin,omitempty"`
+	WalletBalance float32 `json:"walletBalance,omitempty"`
+	MarginBalance float32 `json:"marginBalance,omitempty"`
+	MarginBalancePcnt float64 `json:"marginBalancePcnt,omitempty"`
+	MarginLeverage float64 `json:"marginLeverage,omitempty"`
+	MarginUsedPcnt float64 `json:"marginUsedPcnt,omitempty"`
+	ExcessMargin float32 `json:"excessMargin,omitempty"`
+	ExcessMarginPcnt float64 `json:"excessMarginPcnt,omitempty"`
+	AvailableMargin float32 `json:"availableMargin,omitempty"`
+	WithdrawableMargin float32 `json:"withdrawableMargin,omitempty"`
+	Timestamp time.Time `json:"timestamp,omitempty"`
+	GrossLastValue float32 `json:"grossLastValue,omitempty"`
+	Commission float64 `json:"commission,omitempty"`
+}
+
+type OrderBookL2 struct {
+	Symbol string `json:"symbol"`
+	Id float32 `json:"id"`
+	Side string `json:"side"`
+	Size float32 `json:"size,omitempty"`
+	Price float64 `json:"price,omitempty"`
+}

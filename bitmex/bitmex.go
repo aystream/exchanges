@@ -66,13 +66,17 @@ const (
 	bitmexOrderCancelAllAfter = "order/cancelAllAfter"
 	bitmexOrderClosePosition  = "order/closePosition"
 
+	bitmexOrderBuy  = "Buy"
+	bitmexOrderSell = "Sell"
+	bitmexOrderType = "Limit"
+
 	// OrderBook : Level 2 Book Data
 	bitmexOrderBookL2 = "orderBook/L2"
 
 	// Position : Summary of Open and Closed Positions
 	bitmexPosition               = "position"
 	bitmexPositionIsolate        = "position/isolate"
-	bitmexPositionIeverage       = "position/ieverage"
+	bitmexPositionLeverage       = "position/leverage"
 	bitmexPositionRiskLimit      = "position/riskLimit"
 	bitmexPositionTransferMargin = "position/transferMargin"
 
@@ -295,8 +299,202 @@ func (b *Bitmex) GetOpenPositions(currencyPair string) ([]Position, error) {
 	return openPositions, err
 }
 
+/*
+  * Close Position
+  *
+  * Close open position by Price.
+  * If no price is specified, a market order will be submitted
+  * to close the whole of your position
+  *
+  * @return array TODO checked return type!
+  */
+func (b *Bitmex) ClosePosition(currencyPair string, price float64) error {
+	vals := url.Values{}
+	vals.Set("symbol", currencyPair)
+	if price != 0 {
+		vals.Set("price", strconv.FormatFloat(price, 'E', -1, 64))
+	}
 
+	err := b.SendAuthenticatedHTTPRequest("GET", bitmexOrderClosePosition, vals, nil)
 
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+/*
+  * Edit Order Price
+  *
+  * Edit you open order price
+  *
+  * @param orderID    Order ID
+  * @param price      new price
+  *
+  * @return new order array TODO checked return type!
+  */
+func (b *Bitmex) EditOrderPrice(currencyPair string, price float64) error {
+	vals := url.Values{}
+	vals.Set("symbol", currencyPair)
+
+	if price != 0 {
+		return fmt.Errorf("Not %s Price for edit currency pair %s!", price, currencyPair)
+	}
+
+	vals.Set("price", strconv.FormatFloat(price, 'E', -1, 64))
+
+	err := b.SendAuthenticatedHTTPRequest("PUT", bitmexOrder, vals, nil)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+/*
+ * Create Order
+ *
+ * Create new market order
+ *
+ * @param type can be "Limit"
+ * @param side can be "Buy" or "Sell"
+ * @param price BTC price in USD
+ * @param quantity should be in USD (number of contracts)
+ * @param maker forces platform to complete your order as a 'maker' only
+ *
+ * @return new order array TODO checked return type!
+ */
+func (b *Bitmex) CreateOrder(currencyPair string, typeOrder string, side string, price float64, quantity int, maker bool) error {
+	vals := url.Values{}
+	vals.Set("symbol", currencyPair)
+	vals.Set("side", side)
+	vals.Set("price", strconv.FormatFloat(price, 'E', -1, 64))
+	vals.Set("orderQty", strconv.Itoa(quantity))
+	vals.Set("ordType", typeOrder)
+
+	if maker {
+		vals.Set("execInst", "ParticipateDoNotInitiate")
+	}
+
+	err := b.SendAuthenticatedHTTPRequest("POST", bitmexOrder, vals, nil)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+/*
+ * Cancel All Open Orders
+ *
+ * Cancels all of your open orders
+ *
+ * @param $text is a note to all closed orders
+ *
+ * @return all closed orders arrays TODO checked return type!
+ */
+func (b *Bitmex) CancelAllOpenOrders(currencyPair string, text string) error {
+	vals := url.Values{}
+	vals.Set("symbol", currencyPair)
+	vals.Set("text", text)
+
+	err := b.SendAuthenticatedHTTPRequest("DELETE", bitmexOrderAll, vals, nil)
+
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+/*
+  * Get Wallet
+  *
+  * Get your account wallet
+  *
+  * @return Wallet
+  */
+func (b *Bitmex) GetWallet() (Wallet, error) {
+	vals := url.Values{}
+	vals.Set("currency", "XBt")
+
+	var userWallet Wallet
+
+	err := b.SendAuthenticatedHTTPRequest("GET", bitmexUserWallet, vals, &userWallet)
+
+	if err != nil {
+		return userWallet, err
+	}
+	return userWallet, nil
+}
+
+/*
+ * Get Margin
+ *
+ * Get your account margin
+ *
+ * @return Margin
+ */
+func (b *Bitmex) GetMarginInfo() (Margin, error) {
+	vals := url.Values{}
+	vals.Set("currency", "XBt")
+
+	var userMargin Margin
+
+	err := b.SendAuthenticatedHTTPRequest("GET", bitmexUserMargin, vals, &userMargin)
+
+	if err != nil {
+		return userMargin, err
+	}
+	return userMargin, nil
+}
+
+/*
+ * Get Order Book
+ *
+ * Get L2 Order Book
+ *
+ * @return array
+ */
+func (b *Bitmex) GetOrderBookL2(currencyPair string, depth int) ([]OrderBookL2, error) {
+	vals := url.Values{}
+	vals.Set("symbol", currencyPair)
+	vals.Set("depth", strconv.Itoa(depth))
+
+	var orderBook []OrderBookL2
+
+	err := b.SendAuthenticatedHTTPRequest("GET", bitmexOrderBookL2, vals, &orderBook)
+
+	if err != nil {
+		return orderBook, err
+	}
+	return orderBook, nil
+}
+
+/*
+ * Set Leverage
+ *
+ * Set position leverage
+ * $leverage = 0 for cross margin
+ *
+ * @return array
+ */
+func (b *Bitmex) SetLeverage(currencyPair string, leverage float64) (Position, error) {
+	vals := url.Values{}
+	vals.Set("symbol", currencyPair)
+	vals.Set("leverage", strconv.FormatFloat(leverage, 'E', -1, 64))
+
+	var position Position
+
+	err := b.SendAuthenticatedHTTPRequest("POST", bitmexPositionLeverage, vals, &position)
+
+	if err != nil {
+		return position, err
+	}
+	return position, nil
+}
 
 // SendHTTPRequest sends an unauthenticated HTTP request
 func (b *Bitmex) SendHTTPRequest(path string, result interface{}) error {
