@@ -9,11 +9,9 @@ var b Bitmex
 
 const SYMBOL = "XBTUSD"
 
-
 func TestSetDefaults(t *testing.T) {
 	b.SetDefaults()
 }
-
 
 func TestBitmex_GetTicker(t *testing.T) {
 	_, err := b.GetTicker(SYMBOL)
