@@ -70,7 +70,7 @@ const (
 	bitmexOrderBookL2 = "orderBook/L2"
 
 	// Position : Summary of Open and Closed Positions
-	bittmexPosition              = "position"
+	bitmexPosition               = "position"
 	bitmexPositionIsolate        = "position/isolate"
 	bitmexPositionIeverage       = "position/ieverage"
 	bitmexPositionRiskLimit      = "position/riskLimit"
@@ -193,24 +193,28 @@ func (b *Bitmex) GetCandles(currencyPair string, timeframe string, count int) ([
  *
  * @return array
  */
-func (b *Bitmex) GetOrder(currencyPair string, orderId string, count int) ([]Order, error) {
+func (b *Bitmex) GetOrder(currencyPair string, orderId string, count int) (Order, error) {
 	vals := url.Values{}
-
 	vals.Set("symbol", currencyPair)
 	vals.Set("count", strconv.Itoa(count))
 	vals.Set("reverse", "true")
-	if orderId != "" {
-		vals.Set("filter", "{'orderID':'"+orderId+"'}")
-	}
 
 	var resp []Order
+	var order Order
 
 	err := b.SendAuthenticatedHTTPRequest("GET", bitmexOrder, vals, &resp)
 	if err != nil {
-		return nil, err
+		return order, err
 	}
 
-	return resp, nil
+	for item := range resp {
+		if resp[item].OrderID == orderId {
+			order = resp[item]
+			return order, nil
+		}
+	}
+
+	return order, nil
 }
 
 /*
@@ -237,17 +241,62 @@ func (b *Bitmex) GetOrders(currencyPair string, count int) ([]Order, error) {
 /*
  * Get Open Orders
  *
- * Get open orders from the last 100 orders
- *
  * @return open orders array
  */
-func GetOpenOrders(currencyPair string) () {
+func (b *Bitmex) GetOpenOrders(currencyPair string, count int) ([]Order, error) {
 	vals := url.Values{}
 
 	vals.Set("symbol", currencyPair)
+	vals.Set("count", strconv.Itoa(count))
 	vals.Set("reverse", "true")
+	var resp []Order
 
+	var openOrders []Order
+
+	err := b.SendAuthenticatedHTTPRequest("GET", bitmexOrder, vals, &resp)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range resp {
+		if resp[i].OrdStatus == "New" || resp[i].OrdStatus == "PartiallyFilled" {
+			openOrders = append(openOrders, resp[i])
+		}
+	}
+	return openOrders, err
 }
+
+/*
+ * Get Open Positions
+ *
+ * Get all your open positions
+ *
+ * @return open positions array
+ */
+func (b *Bitmex) GetOpenPositions(currencyPair string) ([]Position, error) {
+	vals := url.Values{}
+	vals.Set("symbol", currencyPair)
+
+	var resp []Position
+	var openPositions []Position
+
+	err := b.SendAuthenticatedHTTPRequest("GET", bitmexPosition, vals, &resp)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range resp {
+		if resp[i].IsOpen == true {
+			openPositions = append(openPositions, resp[i])
+		}
+	}
+	return openPositions, err
+}
+
+
+
 
 // SendHTTPRequest sends an unauthenticated HTTP request
 func (b *Bitmex) SendHTTPRequest(path string, result interface{}) error {
