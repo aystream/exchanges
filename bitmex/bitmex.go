@@ -9,13 +9,13 @@ import (
 	"github.com/CryptoTradingBot/exchanges/common"
 	"bytes"
 	"net/http"
-	"github.com/CryptoTradingBot/exchanges/models"
 	"strconv"
+	"github.com/CryptoTradingBot/exchanges/models"
 )
 
 const (
-	bitmexAPIURL        = "https://www.bitmex.com/api/v1"
-	bitmexAPIVersion    = "v1"
+	bitmexAPIURL     = "https://www.bitmex.com/api/v1"
+	bitmexAPIVersion = "v1"
 
 	bitmexMaxOpenOrders = 200
 	bitmexMaxOrderStop  = 10
@@ -129,12 +129,25 @@ type Bitmex struct {
 	*request.Handler
 }
 
+// SetDefaults sets the basic defaults for bitmex
+func (b *Bitmex) SetDefaults() {
+	b.Name = "Bitmex"
+	b.Enabled = false
+	b.Verbose = false
+	b.Fee = 0
+	b.Websocket = false
+	b.RESTPollingDelay = 10
+	b.SupportsAutoPairUpdating = true
+	b.Handler = new(request.Handler)
+	b.SetRequestHandler(b.Name, bitmexAuthRate, bitmexUnauthRate, new(http.Client))
+}
+
 /*
   * Get Ticker
   *
   * @return ticker array
   */
-func (b *Bitmex) GetTicker(currencyPair string) ([]Ticker, error){
+func (b *Bitmex) GetTicker(currencyPair string) ([]Ticker, error) {
 	vals := url.Values{}
 
 	if currencyPair != "" {
@@ -173,18 +186,67 @@ func (b *Bitmex) GetCandles(currencyPair string, timeframe string, count int) ([
 	return resp, nil
 }
 
+/*
+ * Get Order
+ *
+ * Get order by order ID
+ *
+ * @return array
+ */
+func (b *Bitmex) GetOrder(currencyPair string, orderId string, count int) ([]Order, error) {
+	vals := url.Values{}
 
-// SetDefaults sets the basic defaults for bitmex
-func (b *Bitmex) SetDefaults() {
-	b.Name = "Bitmex"
-	b.Enabled = false
-	b.Verbose = false
-	b.Fee = 0
-	b.Websocket = false
-	b.RESTPollingDelay = 10
-	b.SupportsAutoPairUpdating = true
-	b.Handler = new(request.Handler)
-	b.SetRequestHandler(b.Name, bitmexAuthRate, bitmexUnauthRate, new(http.Client))
+	vals.Set("symbol", currencyPair)
+	vals.Set("count", strconv.Itoa(count))
+	vals.Set("reverse", "true")
+	if orderId != "" {
+		vals.Set("filter", "{'orderID':'"+orderId+"'}")
+	}
+
+	var resp []Order
+
+	err := b.SendAuthenticatedHTTPRequest("GET", bitmexOrder, vals, &resp)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
+}
+
+/*
+ * Get Orders
+ * @return array
+ */
+func (b *Bitmex) GetOrders(currencyPair string, count int) ([]Order, error) {
+	vals := url.Values{}
+
+	vals.Set("symbol", currencyPair)
+	vals.Set("count", strconv.Itoa(count))
+	vals.Set("reverse", "true")
+
+	var resp []Order
+
+	err := b.SendAuthenticatedHTTPRequest("GET", bitmexOrder, vals, &resp)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
+}
+
+/*
+ * Get Open Orders
+ *
+ * Get open orders from the last 100 orders
+ *
+ * @return open orders array
+ */
+func GetOpenOrders(currencyPair string) () {
+	vals := url.Values{}
+
+	vals.Set("symbol", currencyPair)
+	vals.Set("reverse", "true")
+
 }
 
 // SendHTTPRequest sends an unauthenticated HTTP request
@@ -220,8 +282,7 @@ func (p *Bitmex) SendAuthenticatedHTTPRequest(method, endpoint string, values ur
 
 	hmac := common.GetHMAC(common.HashSHA256, []byte(values.Encode()), []byte(p.APISecret))
 	headers["api-signature"] = common.HexEncodeToString(hmac)
-
-	path := bitmexAPIURL
+	path := fmt.Sprintf("%s/%s", bitmexAPIURL, endpoint)
 
 	return p.SendPayload(method, path, headers, bytes.NewBufferString(values.Encode()), result, true, p.Verbose)
 }
