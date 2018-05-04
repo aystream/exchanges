@@ -35,3 +35,7 @@ func TestBitmex_GetOrder(t *testing.T) {
 func TestBitmex_GetOrders(t *testing.T) {
 
 }
+
+func TestBitmex_GetOpenOrders(t *testing.T) {
+
+}
