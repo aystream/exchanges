@@ -26,3 +26,12 @@ func TestBitmex_GetCandles(t *testing.T) {
 	}
 	fmt.Print(candles)
 }
+
+func TestBitmex_GetOrder(t *testing.T) {
+
+}
+
+
+func TestBitmex_GetOrders(t *testing.T) {
+
+}
