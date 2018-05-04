@@ -39,3 +39,7 @@ func TestBitmex_GetOrders(t *testing.T) {
 func TestBitmex_GetOpenOrders(t *testing.T) {
 
 }
+
+func TestBitmex_GetOpenPositions(t *testing.T) {
+
+}
