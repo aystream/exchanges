@@ -26,3 +26,6 @@ func TestBitmex_GetCandles(t *testing.T) {
 	}
 	fmt.Print(candles)
 }
+
+
+
