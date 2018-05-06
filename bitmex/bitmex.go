@@ -157,6 +157,8 @@ func (b *Bitmex) SetDefaults() {
 func (b *Bitmex) Setup(APIKey string, APISecret string, UseSandbox bool) {
 	b.AuthenticatedAPISupport = true // TODO set config struct!
 	b.SetAPIKeys(APIKey, APISecret, "", false)
+
+	b.Verbose = true
 	if UseSandbox {
 		b.APIUrl = bitmexTestnetAPIURL
 	} else {
@@ -559,8 +561,8 @@ func (b *Bitmex) SendAuthenticatedHTTPRequest(method, path string, params map[st
 	}
 
 	headers := make(map[string]string)
-	headers["Content-Type"] = "application/x-www-form-urlencoded"
-	headers["Connection"] = "Keep-Alive"
+	//headers["Content-Type"] = "application/x-www-form-urlencoded"
+	headers["Connection"] = "keep-alive"
 	headers["Keep-Alive"] = "90"
 
 	if b.Nonce.Get() == 0 {
@@ -576,7 +578,7 @@ func (b *Bitmex) SendAuthenticatedHTTPRequest(method, path string, params map[st
 	headers["api-key"] = b.APIKey
 	headers["api-nonce"] = b.Nonce.String()
 	headers["api-signature"] = common.HexEncodeToString(hmac)
-	path = fmt.Sprintf("%s/%s/%s", b.APIUrl, "api/v1", path)
+	path = fmt.Sprintf("%s/%s/%s", b.APIUrl, bitmexAPIVersion, path)
 
 	return b.SendPayload(method, path, headers, bytes.NewBuffer(payload), result, true, b.Verbose)
 }

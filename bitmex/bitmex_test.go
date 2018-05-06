@@ -2,7 +2,6 @@ package bitmex
 
 import (
 	"testing"
-	"fmt"
 )
 
 var b Bitmex
@@ -10,8 +9,8 @@ var b Bitmex
 const (
 	Login = "caj10958@soioa.com"
 	Password = "o9p0[-]="
-	Key = "hD6WCCUD9O_dyAoOQNgW8oyz"
-	KeySecret = "gzu1KMGGwsNIQFzGXdY9rk0ZGJ8w011BqRYVwJoAFBOKT4HD"
+	Key = "yHCVhvImDYXCyDVJCiJPjUDT"
+	KeySecret = "b6LvJGLI3-cZJ5geVhRvccdE_w9y94opWVzaX5mGPReRJHMK"
 	SYMBOL = "XBTUSD"
 )
 
@@ -34,7 +33,7 @@ func TestBitmex_GetCandles(t *testing.T) {
 	if err != nil {
 		t.Error("Test faild - Bitmex GetTicker() error")
 	}
-	fmt.Print(candles)
+	t.Logf("%+v\n",candles)
 }
 
 func TestBitmex_GetOrders(t *testing.T) {
@@ -42,7 +41,7 @@ func TestBitmex_GetOrders(t *testing.T) {
 	if err != nil {
 		t.Error("Test faild - Bitmex GetOrders() error")
 	}
-	fmt.Print(orders)
+	t.Logf("%+v\n",orders)
 }
 
 func TestBitmex_GetOpenOrders(t *testing.T) {
@@ -50,7 +49,7 @@ func TestBitmex_GetOpenOrders(t *testing.T) {
 	if err != nil {
 		t.Error("Test faild - Bitmex GetOrders() error")
 	}
-	fmt.Print(orders)
+	t.Logf("%+v\n",orders)
 }
 
 func TestBitmex_GetOpenPositions(t *testing.T) {
@@ -62,5 +61,13 @@ func TestBitmex_GetMarginInfo(t *testing.T) {
 	if err != nil {
 		t.Error("Test faild - Bitmex GetMarginInfo() error")
 	}
-	fmt.Print(margin)
+	t.Logf("%+v\n",margin)
+}
+
+func TestBitmex_SetLeverage(t *testing.T) {
+	position, err := b.SetLeverage(SYMBOL, 10)
+	if err != nil {
+		t.Error("Test faild - Bitmex SetLeverage() error")
+	}
+	t.Logf("%+v\n", position)
 }
