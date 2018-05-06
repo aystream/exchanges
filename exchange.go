@@ -3,13 +3,17 @@ package exchanges
 import (
 	"github.com/CryptoTradingBot/exchanges/nonce"
 	"time"
+	"log"
+	"github.com/CryptoTradingBot/exchanges/common"
 )
 
 const (
+	warningBase64DecryptSecretKeyFailed              = "WARNING -- Exchange %s unable to base64 decode secret key.. Disabling Authenticated API support."
 	WarningAuthenticatedRequestWithoutCredentialsSet = "WARNING -- Exchange %s authenticated HTTP request called but not supported due to unset/default API keys."
-	ErrExchangeNotFound = "Exchange not found in dataset."
+	ErrExchangeNotFound                              = "Exchange not found in dataset."
 )
 
+// Base stores the individual exchange information
 type Base struct {
 	Name                        string
 	Enabled                     bool
@@ -28,8 +32,17 @@ type Base struct {
 	SupportsAutoPairUpdating    bool
 	WebsocketURL                string
 	APIUrl                      string
+	RequestCurrencyPairFormat   CurrencyPairFormatConfig
+	ConfigCurrencyPairFormat    CurrencyPairFormatConfig
 }
 
+// CurrencyPairFormatConfig stores the users preferred currency pair display
+type CurrencyPairFormatConfig struct {
+	Uppercase bool
+	Delimiter string `json:",omitempty"`
+	Separator string `json:",omitempty"`
+	Index     string `json:",omitempty"`
+}
 
 // standard function in bot for exchange
 type BotExchangeInterface interface {
@@ -47,7 +60,6 @@ type BotExchangeInterface interface {
 	GetOrderBook()
 	SetLeverage() //?
 
-
 	/**/
 	GetMarkets()
 	BuyLimit()
@@ -58,5 +70,25 @@ type BotExchangeInterface interface {
 	GetTicker()
 	GetMarketSummaries()
 	GetMarketSummary()
+}
 
+// SetAPIKeys is a method that sets the current API keys for the exchange
+func (e *Base) SetAPIKeys(APIKey, APISecret, ClientID string, b64Decode bool) {
+	if !e.AuthenticatedAPISupport {
+		return
+	}
+
+	e.APIKey = APIKey
+	e.ClientID = ClientID
+
+	if b64Decode {
+		result, err := common.Base64Decode(APISecret)
+		if err != nil {
+			e.AuthenticatedAPISupport = false
+			log.Printf(warningBase64DecryptSecretKeyFailed, e.Name)
+		}
+		e.APISecret = string(result)
+	} else {
+		e.APISecret = APISecret
+	}
 }

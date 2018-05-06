@@ -84,7 +84,7 @@ func GeneratedCandlesFromTimeframe(candles []Candle, currentTimeframe TimeFrame,
 			// this is close candle or price close
 			close = candle.Close
 
-			newCandle := Candle{AskPrice: close, BidPrice: close, High: height, Low: low, Open: open, Close: close, Symbol: candle.Symbol,
+			newCandle := Candle{ High: height, Low: low, Open: open, Close: close, Symbol: candle.Symbol,
 				Timestamp: timestamp, Volume: volume}
 			// Add List in new generate candle
 			newGeneratedCandles = append(newGeneratedCandles, newCandle)
