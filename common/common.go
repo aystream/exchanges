@@ -29,6 +29,11 @@ import (
 	"time"
 )
 
+// Vars for common.go operations
+var (
+	HTTPClient *http.Client
+)
+
 // Const declarations for common.go operations
 const (
 	HashSHA1 = iota
@@ -39,6 +44,21 @@ const (
 	SatoshisPerLTC = 100000000
 	WeiPerEther    = 1000000000000000000
 )
+
+func initialiseHTTPClient() {
+	// If the HTTPClient isn't set, start a new client with a default timeout of 5 seconds
+	if HTTPClient == nil {
+		HTTPClient = NewHTTPClientWithTimeout(time.Duration(time.Second * 5))
+	}
+}
+
+// NewHTTPClientWithTimeout initalises a new HTTP client with the specified
+// timeout duration
+func NewHTTPClientWithTimeout(t time.Duration) *http.Client {
+	h := &http.Client{Timeout: t}
+	return h
+}
+
 
 // GetMD5 returns a MD5 hash of a byte array
 func GetMD5(input []byte) []byte {
@@ -155,11 +175,11 @@ func StringDataCompare(haystack []string, needle string) bool {
 	return false
 }
 
-// StringDataContainsUpper checks the substring array with an input and returns
+// StringDataCompareUpper data checks the substring array with an input and returns
 // a bool irrespective of lower or upper case strings
-func StringDataContainsUpper(haystack []string, needle string) bool {
-	for _, data := range haystack {
-		if strings.Contains(StringToUpper(data), StringToUpper(needle)) {
+func StringDataCompareUpper(haystack []string, needle string) bool {
+	for x := range haystack {
+		if StringToUpper(haystack[x]) == StringToUpper(needle) {
 			return true
 		}
 	}

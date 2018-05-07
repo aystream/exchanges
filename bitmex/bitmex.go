@@ -7,12 +7,9 @@ import (
 	"time"
 	"github.com/CryptoTradingBot/exchanges/request"
 	"github.com/CryptoTradingBot/exchanges/common"
-	"bytes"
-	"net/http"
 	"strconv"
 	"github.com/CryptoTradingBot/exchanges/models"
-	"log"
-	"errors"
+	"strings"
 )
 
 const (
@@ -133,7 +130,6 @@ const (
 // Bitmex is the overacting type across the bitmex methods
 type Bitmex struct {
 	exchange.Base
-	*request.Handler
 }
 
 // SetDefaults sets the basic defaults for bitmex
@@ -149,8 +145,7 @@ func (b *Bitmex) SetDefaults() {
 	b.ConfigCurrencyPairFormat.Delimiter = ""
 	b.ConfigCurrencyPairFormat.Uppercase = true
 	b.SupportsAutoPairUpdating = true
-	b.Handler = new(request.Handler)
-	b.SetRequestHandler(b.Name, bitmexAuthRate, bitmexUnauthRate, new(http.Client))
+	b.Requester = request.New(b.Name, request.NewRateLimit(time.Second, bitmexAuthRate), request.NewRateLimit(time.Second, bitmexUnauthRate), common.NewHTTPClientWithTimeout(exchange.DefaultHTTPTimeout))
 }
 
 // TODO set from Config! Example test method!
@@ -341,7 +336,7 @@ func (b *Bitmex) ClosePosition(currencyPair string, price float64) error {
 	vals := url.Values{}
 	vals.Set("symbol", currencyPair)
 	if price != 0 {
-		vals.Set("price", strconv.FormatFloat(price, 'E', -1, 64))
+		vals.Set("price", strconv.FormatFloat(price, 'f', -1, 64))
 	}
 
 	path := common.EncodeURLValues(b.APIUrl+"/"+bitmexOrderClosePosition, vals)
@@ -366,16 +361,16 @@ func (b *Bitmex) ClosePosition(currencyPair string, price float64) error {
   * @return new order array TODO checked return type!
   */
 func (b *Bitmex) EditOrderPrice(currencyPair string, price float64) error {
-	request := make(map[string]interface{})
-	request["symbol"] = currencyPair
+	vals := url.Values{}
+	vals.Set("symbol", currencyPair)
 
 	if price != 0 {
 		return fmt.Errorf("Not %s Price for edit currency pair %s!", price, currencyPair)
 	}
 
-	request["price"] = price
+	vals.Set("price", strconv.FormatFloat(price, 'f', -1, 64))
 
-	err := b.SendAuthenticatedHTTPRequest("PUT", bitmexOrder, request, nil)
+	err := b.SendAuthenticatedHTTPRequest("PUT", bitmexOrder, vals, nil)
 
 	if err != nil {
 		return err
@@ -398,18 +393,18 @@ func (b *Bitmex) EditOrderPrice(currencyPair string, price float64) error {
  * @return new order array TODO checked return type!
  */
 func (b *Bitmex) CreateOrder(currencyPair string, typeOrder string, side string, price float64, quantity int, maker bool) error {
-	request := make(map[string]interface{})
-	request["symbol"] = currencyPair
-	request["side"] = side
-	request["price"] = price
-	request["orderQty"] = quantity
-	request["ordType"] = typeOrder
+	vals := url.Values{}
+	vals.Set("symbol", currencyPair)
+	vals.Set("side", side)
+	vals.Set("price", strconv.FormatFloat(price, 'f', -1, 64))
+	vals.Set("orderQty", strconv.Itoa(quantity))
+	vals.Set("ordType", typeOrder)
 
 	if maker {
-		request["execInst"] = "ParticipateDoNotInitiate"
+		vals.Set("execInst", "ParticipateDoNotInitiate")
 	}
 
-	err := b.SendAuthenticatedHTTPRequest("POST", bitmexOrder, request, nil)
+	err := b.SendAuthenticatedHTTPRequest("POST", bitmexOrder, vals, nil)
 
 	if err != nil {
 		return err
@@ -428,11 +423,11 @@ func (b *Bitmex) CreateOrder(currencyPair string, typeOrder string, side string,
  * @return all closed orders arrays TODO checked return type!
  */
 func (b *Bitmex) CancelAllOpenOrders(currencyPair string, text string) error {
-	request := make(map[string]interface{})
-	request["symbol"] = currencyPair
-	request["text"] = text
+	vals := url.Values{}
+	vals.Set("symbol", currencyPair)
+	vals.Set("text", text)
 
-	err := b.SendAuthenticatedHTTPRequest("DELETE", bitmexOrderAll, request, nil)
+	err := b.SendAuthenticatedHTTPRequest("DELETE", bitmexOrderAll, vals, nil)
 
 	if err != nil {
 		return err
@@ -519,13 +514,13 @@ func (b *Bitmex) GetOrderBookL2(currencyPair string, depth int) ([]OrderBookL2, 
  * @return array
  */
 func (b *Bitmex) SetLeverage(currencyPair string, leverage float64) (Position, error) {
-	request := make(map[string]interface{})
-	request["symbol"] = currencyPair
-	request["leverage"] = leverage
+	vals := url.Values{}
+	vals.Set("symbol", currencyPair)
+	vals.Set("leverage", strconv.FormatFloat(leverage, 'f', -1, 64))
 
 	var position Position
 
-	err := b.SendAuthenticatedHTTPRequest("POST", bitmexPositionLeverage, request, &position)
+	err := b.SendAuthenticatedHTTPRequest("POST", bitmexPositionLeverage, vals, &position)
 
 	if err != nil {
 		return position, err
@@ -536,28 +531,15 @@ func (b *Bitmex) SetLeverage(currencyPair string, leverage float64) (Position, e
 // SendHTTPRequest sends an unauthenticated HTTP request
 func (b *Bitmex) SendHTTPRequest(path string, result interface{}) error {
 	headers := make(map[string]string)
-	headers["Connection"] = "Keep-Alive"
+	headers["Connection"] = "keep-alive"
 	headers["Keep-Alive"] = "90"
 	return b.SendPayload("GET", path, headers, nil, result, false, b.Verbose)
 }
 
 // SendAuthenticatedHTTPRequest sends an authenticated HTTP request
-func (b *Bitmex) SendAuthenticatedHTTPRequest(method, path string, params map[string]interface{}, result interface{}) (err error) {
+func (b *Bitmex) SendAuthenticatedHTTPRequest(method, path string, values url.Values, result interface{}) (err error) {
 	if !b.AuthenticatedAPISupport {
 		return fmt.Errorf(exchange.WarningAuthenticatedRequestWithoutCredentialsSet, b.Name)
-	}
-
-	payload := []byte("")
-
-	if params != nil {
-		payload, err = common.JSONEncode(params)
-		if err != nil {
-			return errors.New("SendAuthenticatedHTTPRequest: Unable to JSON request")
-		}
-
-		if b.Verbose {
-			log.Printf("Request JSON: %s\n", payload)
-		}
 	}
 
 	headers := make(map[string]string)
@@ -566,19 +548,30 @@ func (b *Bitmex) SendAuthenticatedHTTPRequest(method, path string, params map[st
 	headers["Keep-Alive"] = "90"
 
 	if b.Nonce.Get() == 0 {
-		b.Nonce.Set(time.Now().Unix())
+		b.Nonce.Set(time.Now().UnixNano() / 10000)
 	} else {
 		b.Nonce.Inc()
 	}
 
 	nonce := b.Nonce.String()
-	message := method + "/" + bitmexAPIVersion + "/"+ path + nonce + string(payload)
+	message := method + "/" + bitmexAPIVersion + "/" + path + nonce + values.Encode()
 	hmac := common.GetHMAC(common.HashSHA256, []byte(message), []byte(b.APISecret))
 
-	headers["api-key"] = b.APIKey
-	headers["api-nonce"] = b.Nonce.String()
-	headers["api-signature"] = common.HexEncodeToString(hmac)
-	path = fmt.Sprintf("%s/%s/%s", b.APIUrl, bitmexAPIVersion, path)
+	fmt.Println(message)
 
-	return b.SendPayload(method, path, headers, bytes.NewBuffer(payload), result, true, b.Verbose)
+	headers["Api-Key"] = b.APIKey
+	headers["Api-Nonce"] = b.Nonce.String()
+	headers["Api-Signature"] = common.HexEncodeToString(hmac)
+
+	if method != "GET" {
+		headers["Content-Type"] = "application/x-www-form-urlencoded"
+	}
+/*	headers["Accept"] = "application/json"
+	headers["X-Requested-With"] = "XMLHttpRequest"*/
+
+	fmt.Println(headers)
+	path = fmt.Sprintf("%s/%s/%s", b.APIUrl, bitmexAPIVersion, path)
+	fmt.Println(path)
+	fmt.Println(values.Encode())
+	return b.SendPayload(method, path, headers, strings.NewReader(values.Encode()), result, true, b.Verbose)
 }

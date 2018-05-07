@@ -5,12 +5,15 @@ import (
 	"time"
 	"log"
 	"github.com/CryptoTradingBot/exchanges/common"
+	"github.com/CryptoTradingBot/exchanges/request"
 )
 
 const (
 	warningBase64DecryptSecretKeyFailed              = "WARNING -- Exchange %s unable to base64 decode secret key.. Disabling Authenticated API support."
 	WarningAuthenticatedRequestWithoutCredentialsSet = "WARNING -- Exchange %s authenticated HTTP request called but not supported due to unset/default API keys."
 	ErrExchangeNotFound                              = "Exchange not found in dataset."
+	// DefaultHTTPTimeout is the default HTTP/HTTPS Timeout for exchange requests
+	DefaultHTTPTimeout = time.Second * 15
 )
 
 // Base stores the individual exchange information
@@ -34,6 +37,7 @@ type Base struct {
 	APIUrl                      string
 	RequestCurrencyPairFormat   CurrencyPairFormatConfig
 	ConfigCurrencyPairFormat    CurrencyPairFormatConfig
+	*request.Requester
 }
 
 // CurrencyPairFormatConfig stores the users preferred currency pair display
