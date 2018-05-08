@@ -330,24 +330,25 @@ func (b *Bitmex) GetOpenPositions(currencyPair string) ([]Position, error) {
   * If no price is specified, a market order will be submitted
   * to close the whole of your position
   *
-  * @return array TODO checked return type!
+  * @return array
   */
-func (b *Bitmex) ClosePosition(currencyPair string, price float64) error {
+func (b *Bitmex) ClosePosition(currencyPair string, price float64) (Order, error) {
 	vals := url.Values{}
 	vals.Set("symbol", currencyPair)
 	if price != 0 {
 		vals.Set("price", strconv.FormatFloat(price, 'f', -1, 64))
 	}
+	var order Order
 
 	path := common.EncodeURLValues(b.APIUrl+"/"+bitmexOrderClosePosition, vals)
 	uri := common.GetURIPath(path)
 
-	err := b.SendAuthenticatedHTTPRequest("GET", uri[1:], nil, nil)
+	err := b.SendAuthenticatedHTTPRequest("GET", uri[1:], nil, &order)
 	if err != nil {
-		return err
+		return order, err
 	}
 
-	return nil
+	return order, nil
 }
 
 /*
@@ -358,25 +359,27 @@ func (b *Bitmex) ClosePosition(currencyPair string, price float64) error {
   * @param orderID    Order ID
   * @param price      new price
   *
-  * @return new order array TODO checked return type!
+  * @return new order array
   */
-func (b *Bitmex) EditOrderPrice(currencyPair string, price float64) error {
+func (b *Bitmex) EditOrderPrice(orderID string, price float64) (Order, error) {
 	vals := url.Values{}
-	vals.Set("symbol", currencyPair)
+	vals.Set("orderID", orderID)
 
-	if price != 0 {
-		return fmt.Errorf("Not %s Price for edit currency pair %s!", price, currencyPair)
+	var order Order
+
+	if price == 0 {
+		return order, fmt.Errorf("Not %s Price for edit currency orderId %s!", price, orderID)
 	}
 
 	vals.Set("price", strconv.FormatFloat(price, 'f', -1, 64))
 
-	err := b.SendAuthenticatedHTTPRequest("PUT", bitmexOrder, vals, nil)
+	err := b.SendAuthenticatedHTTPRequest("PUT", bitmexOrder, vals, &order)
 
 	if err != nil {
-		return err
+		return order, err
 	}
 
-	return nil
+	return order, err
 }
 
 /*
@@ -390,9 +393,9 @@ func (b *Bitmex) EditOrderPrice(currencyPair string, price float64) error {
  * @param quantity should be in USD (number of contracts)
  * @param maker forces platform to complete your order as a 'maker' only
  *
- * @return new order array TODO checked return type!
+ * @return new order array
  */
-func (b *Bitmex) CreateOrder(currencyPair string, typeOrder string, side string, price float64, quantity int, maker bool) error {
+func (b *Bitmex) CreateOrder(currencyPair string, typeOrder string, side string, price float64, quantity int, maker bool) (Order, error) {
 	vals := url.Values{}
 	vals.Set("symbol", currencyPair)
 	vals.Set("side", side)
@@ -404,13 +407,15 @@ func (b *Bitmex) CreateOrder(currencyPair string, typeOrder string, side string,
 		vals.Set("execInst", "ParticipateDoNotInitiate")
 	}
 
-	err := b.SendAuthenticatedHTTPRequest("POST", bitmexOrder, vals, nil)
+	var order Order
+
+	err := b.SendAuthenticatedHTTPRequest("POST", bitmexOrder, vals, &order)
 
 	if err != nil {
-		return err
+		return order, err
 	}
 
-	return nil
+	return order, nil
 }
 
 /*
@@ -420,19 +425,20 @@ func (b *Bitmex) CreateOrder(currencyPair string, typeOrder string, side string,
  *
  * @param $text is a note to all closed orders
  *
- * @return all closed orders arrays TODO checked return type!
+ * @return all closed orders arrays
  */
-func (b *Bitmex) CancelAllOpenOrders(currencyPair string, text string) error {
+func (b *Bitmex) CancelAllOpenOrders(currencyPair string, text string) (interface{}, error) {
 	vals := url.Values{}
 	vals.Set("symbol", currencyPair)
 	vals.Set("text", text)
 
-	err := b.SendAuthenticatedHTTPRequest("DELETE", bitmexOrderAll, vals, nil)
+	var cancelAllOrders interface{}
+	err := b.SendAuthenticatedHTTPRequest("DELETE", bitmexOrderAll, vals, &cancelAllOrders)
 
 	if err != nil {
-		return err
+		return cancelAllOrders, err
 	}
-	return nil
+	return cancelAllOrders, nil
 }
 
 /*
@@ -490,6 +496,12 @@ func (b *Bitmex) GetMarginInfo() (Margin, error) {
  */
 func (b *Bitmex) GetOrderBookL2(currencyPair string, depth int) ([]OrderBookL2, error) {
 	vals := url.Values{}
+
+	// if depth = 0 -> change default depth 25
+	if depth == 0 {
+		depth = 25
+	}
+
 	vals.Set("symbol", currencyPair)
 	vals.Set("depth", strconv.Itoa(depth))
 
@@ -566,8 +578,8 @@ func (b *Bitmex) SendAuthenticatedHTTPRequest(method, path string, values url.Va
 	if method != "GET" {
 		headers["Content-Type"] = "application/x-www-form-urlencoded"
 	}
-/*	headers["Accept"] = "application/json"
-	headers["X-Requested-With"] = "XMLHttpRequest"*/
+	/*	headers["Accept"] = "application/json"
+		headers["X-Requested-With"] = "XMLHttpRequest"*/
 
 	fmt.Println(headers)
 	path = fmt.Sprintf("%s/%s/%s", b.APIUrl, bitmexAPIVersion, path)
