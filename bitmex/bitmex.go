@@ -11,7 +11,6 @@ import (
 	"github.com/CryptoTradingBot/exchanges/models"
 	"strings"
 	"github.com/CryptoTradingBot/exchanges/config"
-	"log"
 )
 
 const (
@@ -164,7 +163,7 @@ func (b *Bitmex) Setup(exch config.ExchangeConfig) {
 		b.BaseCurrencies = common.SplitStrings(exch.BaseCurrencies, ",")
 		b.AvailablePairs = common.SplitStrings(exch.AvailablePairs, ",")
 		b.EnabledPairs = common.SplitStrings(exch.EnabledPairs, ",")
-		err := b.SetCurrencyPairFormat()
+	/*	err := b.SetCurrencyPairFormat()
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -175,7 +174,7 @@ func (b *Bitmex) Setup(exch config.ExchangeConfig) {
 		err = b.SetAutoPairDefaults()
 		if err != nil {
 			log.Fatal(err)
-		}
+		}*/
 		if exch.UseSandbox {
 			b.APIUrl = bitmexTestnetAPIURL
 		} else {

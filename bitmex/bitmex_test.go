@@ -22,11 +22,12 @@ func TestSetDefaults(t *testing.T) {
 
 func TestBitmex_Setup(t *testing.T) {
 	exchangeConfig := config.ExchangeConfig{
-		Verbose:true,
-		AuthenticatedAPISupport:true,
-		APIKey: Key,
-		APISecret: KeySecret,
-		UseSandbox: true,
+		Enabled:                 true,
+		Verbose:                 true,
+		AuthenticatedAPISupport: true,
+		APIKey:                  Key,
+		APISecret:               KeySecret,
+		UseSandbox:              true,
 	}
 
 	b.Setup(exchangeConfig)
@@ -47,7 +48,6 @@ func TestBitmex_GetCandles(t *testing.T) {
 	t.Logf("%+v\n", candles)
 }
 
-
 func TestBitmex_CreateOrder(t *testing.T) {
 	// Get Order book and test method at the first price
 	orderBook, err := b.GetOrderBookL2(SYMBOL, 25)
@@ -55,14 +55,12 @@ func TestBitmex_CreateOrder(t *testing.T) {
 		t.Error("Test faild - Bitmex GetOrderBookL2() error")
 	}
 	// Create limit order!
-	order, err := b.CreateOrder(SYMBOL, "Limit", "Buy", orderBook[0].Price - 100, 100,  true)
+	order, err := b.CreateOrder(SYMBOL, "Limit", "Buy", orderBook[0].Price-100, 100, true)
 	if err != nil {
 		t.Error("Test faild - Bitmex CreateOrder() error")
 	}
 	t.Logf("%+v\n", order)
 }
-
-
 
 func TestBitmex_GetOrders(t *testing.T) {
 	orders, err := b.GetOrders(SYMBOL, 100)
@@ -118,7 +116,7 @@ func TestBitmex_ClosePosition(t *testing.T) {
 }
 
 func TestBitmex_CancelAllOpenOrders(t *testing.T) {
-	_,err := b.CancelAllOpenOrders(SYMBOL, "Cancel all position for " + SYMBOL)
+	_, err := b.CancelAllOpenOrders(SYMBOL, "Cancel all position for "+SYMBOL)
 	if err != nil {
 		t.Error("Test faild - Bitmex CancelAllOpenOrders() error")
 	}
@@ -147,7 +145,6 @@ func TestBitmex_GetOrderBookL2(t *testing.T) {
 	}
 	t.Logf("%+v\n", orderBook)
 }
-
 
 func TestBitmex_SetLeverage(t *testing.T) {
 	position, err := b.SetLeverage(SYMBOL, 10)
