@@ -150,7 +150,6 @@ func (b *Bitmex) SetDefaults() {
 	b.Requester = request.New(b.Name, request.NewRateLimit(time.Second, bitmexAuthRate), request.NewRateLimit(time.Second, bitmexUnauthRate), common.NewHTTPClientWithTimeout(exchange.DefaultHTTPTimeout))
 }
 
-// TODO set from Config! Example test method!
 func (b *Bitmex) Setup(exch config.ExchangeConfig) {
 	if !exch.Enabled {
 		b.SetEnabled(false)

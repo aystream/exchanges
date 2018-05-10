@@ -2,9 +2,12 @@ package bitmex
 
 import (
 	"testing"
+	"github.com/CryptoTradingBot/exchanges/config"
 )
 
 var b Bitmex
+
+var exchangeConfig config.ExchangeConfig
 
 const (
 	// fields for test verification bitmex methods
@@ -18,7 +21,15 @@ func TestSetDefaults(t *testing.T) {
 }
 
 func TestBitmex_Setup(t *testing.T) {
-	b.Setup(Key, KeySecret, true)
+	exchangeConfig := config.ExchangeConfig{
+		Verbose:true,
+		AuthenticatedAPISupport:true,
+		APIKey: Key,
+		APISecret: KeySecret,
+		UseSandbox: true,
+	}
+
+	b.Setup(exchangeConfig)
 }
 
 func TestBitmex_GetTicker(t *testing.T) {
