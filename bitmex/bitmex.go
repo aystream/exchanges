@@ -10,6 +10,8 @@ import (
 	"strconv"
 	"github.com/CryptoTradingBot/exchanges/models"
 	"strings"
+	"github.com/CryptoTradingBot/exchanges/config"
+	"log"
 )
 
 const (
@@ -149,15 +151,37 @@ func (b *Bitmex) SetDefaults() {
 }
 
 // TODO set from Config! Example test method!
-func (b *Bitmex) Setup(APIKey string, APISecret string, UseSandbox bool) {
-	b.AuthenticatedAPISupport = true // TODO set config struct!
-	b.SetAPIKeys(APIKey, APISecret, "", false)
-
-	b.Verbose = true
-	if UseSandbox {
-		b.APIUrl = bitmexTestnetAPIURL
+func (b *Bitmex) Setup(exch config.ExchangeConfig) {
+	if !exch.Enabled {
+		b.SetEnabled(false)
 	} else {
-		b.APIUrl = bitmexAPIURL
+		b.Enabled = true
+		b.AuthenticatedAPISupport = exch.AuthenticatedAPISupport
+		b.SetAPIKeys(exch.APIKey, exch.APISecret, "", false)
+		b.SetHTTPClientTimeout(exch.HTTPTimeout)
+		b.RESTPollingDelay = exch.RESTPollingDelay
+		b.Verbose = exch.Verbose
+		b.Websocket = exch.Websocket
+		b.BaseCurrencies = common.SplitStrings(exch.BaseCurrencies, ",")
+		b.AvailablePairs = common.SplitStrings(exch.AvailablePairs, ",")
+		b.EnabledPairs = common.SplitStrings(exch.EnabledPairs, ",")
+		err := b.SetCurrencyPairFormat()
+		if err != nil {
+			log.Fatal(err)
+		}
+		err = b.SetAssetTypes()
+		if err != nil {
+			log.Fatal(err)
+		}
+		err = b.SetAutoPairDefaults()
+		if err != nil {
+			log.Fatal(err)
+		}
+		if exch.UseSandbox {
+			b.APIUrl = bitmexTestnetAPIURL
+		} else {
+			b.APIUrl = bitmexAPIURL
+		}
 	}
 }
 
