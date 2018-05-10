@@ -5,6 +5,11 @@ import (
 	"log"
 )
 
+type Candles []Candle
+func (c Candles) Len() int           { return len(c) }
+func (c Candles) Swap(i, j int)      { c[i], c[j] = c[j], c[i] }
+func (c Candles) Less(i, j int) bool { return c[i].Timestamp.Unix() < c[j].Timestamp.Unix()  }
+
 // General candle when receiving data from exchange
 type Candle struct {
 	Close     float64   `json:"close,omitempty"`

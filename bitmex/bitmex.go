@@ -11,6 +11,7 @@ import (
 	"github.com/CryptoTradingBot/exchanges/models"
 	"strings"
 	"github.com/CryptoTradingBot/exchanges/config"
+	"sort"
 )
 
 const (
@@ -206,6 +207,7 @@ func (b *Bitmex) GetTicker(currencyPair string) ([]Ticker, error) {
 	return resp, nil
 }
 
+
 // Get Candles history by current pair and timeFrame (can be 1m 5m 1h)
 func (b *Bitmex) GetCandles(currencyPair string, timeframe string, count int) ([]models.Candle, error) {
 	vals := url.Values{}
@@ -224,6 +226,7 @@ func (b *Bitmex) GetCandles(currencyPair string, timeframe string, count int) ([
 		return nil, err
 	}
 
+	sort.Sort(models.Candles(resp))
 	return resp, nil
 }
 
